@@ -2,35 +2,6 @@
   (:require [clojure.test :refer :all]
             [pagerank.core :refer :all]))
 
-(defn double= [x y]
-  (<= (Math/abs (- (double x) (double y))) 0.0001))
-
-(defn double-coll= [x-coll y-coll]
-  (every? true? (map double= x-coll y-coll)))
-
-(deftest double=-test-1
-  (testing "double= for doubles"
-    (is (true? (double= 1 0.99999999)))))
-
-(deftest double=-test-2
-  (testing "double= for fractions"
-    (is (true? (double= 1/3 0.3333)))
-    (is (true? (double= 1/3 3/9)))))
-
-(deftest double-coll=-test-1
-  (testing "double-coll= on vectors"
-    (is (true? (double-coll= [1 1/3 0.421] [1 1/3 0.421])))))
-
-(deftest double-coll=-test-2
-  (testing "double-coll= on lists"
-    (is (true? (double-coll= '(1 1/3 0.421) '(1 1/3 0.421))))))
-
-;  (testing "double-coll= on a list and a vector"
-
-(deftest base-test
-  (testing "base test."
-    (is (= 1 1))))
-
 (deftest diff-test-1
   (testing "diff 1 2."
     (is (= 1 (diff 1 2)))))
@@ -43,6 +14,16 @@
   (testing "diff 2.3 1."
     (is (= 1.5 (diff 2.5 1)))))
 
+(deftest almost-equal-test-1
+  (testing "almost-equal for doubles"
+    (is (true? (almost-equal 1 0.999999999)))))
+
+(deftest almost-equal-test-2
+  (testing "almost-equal for fractions"
+    (is (true? (almost-equal 1/3 3/9)))
+    (is (false? (almost-equal 1/3 0.3)))
+    (is (true? (almost-equal 1/3 0.333333333)))))
+
 (deftest vector-diff-test-1
   (testing "diff [2 1] [1 2]."
     (is (= 2 (vector-diff [2 1] [1 2])))))
@@ -51,17 +32,17 @@
   (testing "diff [2.5 1] [1 2.5]."
     (is (= 3.0 (vector-diff [2.5 1] [1 2.5])))))
 
-(deftest double-vector-equal-test-1
+(deftest vector-almost-equal-test-1
   (testing "the same vectors."
-    (is (true? (double-vector-equal [1 3.342 543.99] [1 3.342 543.99])))))
+    (is (true? (vector-almost-equal [1 3.342 543.99] [1 3.342 543.99] 1E-3)))))
 
-(deftest double-vector-equal-test-2
+(deftest vector-almost-equal-test-2
   (testing "vectors with an element of 1e-2 diff."
-    (is (false? (double-vector-equal [1 3.342 544] [1 3.342 543.99])))))
+    (is (false? (vector-almost-equal [1 3.342 544] [1 3.342 543.99] 1E-3)))))
 
-(deftest double-vector-equal-test-3
+(deftest vector-almost-equal-test-3
   (testing "vectors of multiple elements with diff 1e-7."
-    (is (true? (double-vector-equal [1.0000001 3.3420001 543.99] [1 3.342 543.99])))))
+    (is (true? (vector-almost-equal [1.0000001 3.3420001 543.99] [1 3.342 543.99] 1E-3  )))))
 
 (deftest initial-pagerank-test
   (testing "initial pagerank of 3 elements."
@@ -93,11 +74,11 @@
 
 (deftest pagerank-row-test
   (testing "calculating pagerank of an element."
-    (is (double= 0.15 (pagerank-row [0.1 0.5 0.2] [0.3 0.2 0.1])))))
+    (is (almost-equal 0.15 (pagerank-row [0.1 0.5 0.2] [0.3 0.2 0.1])))))
 
 (deftest make-pagerank-calculator-test
   (testing "make-pagerank-calculator."
-    (is (double= (first ((make-pagerank-calculator 0.85 [[1]]) [1])) 1))))
+    (is (almost-equal (first ((make-pagerank-calculator 0.85 [[1]]) [1])) 1))))
 
 (deftest make-stabilized?-test-1
   (testing "epsilon is 1."
@@ -109,7 +90,7 @@
     (defn smalldiff? [x y e] (<= (Math/abs (- x y)) e))
     (defn smalldiff?-maker [e] #(smalldiff? %1 %2 e))
     (defn half [x] (double (/ x 2)))
-    (is (double= 4.0 (recur-improve 0 1024 half (smalldiff?-maker 5))))))
+    (is (almost-equal 4.0 (recur-improve 0 1024 half (smalldiff?-maker 5))))))
 
 (deftest pagerank-test-1
   (testing "a 1x1 matrix with beta and epsilon are 1."
@@ -117,8 +98,8 @@
 
 (deftest pagerank-test-2
   (testing "a 3x3 matrix with beta is 1."
-    (is (double-coll= [0.4 0.2 0.4] (pagerank 1 1.0E-10 [[0 0 1] [1 0 0] [1 1 0]])))))
+    (is (vector-almost-equal [0.4 0.2 0.4] (pagerank 1 1.0E-10 [[0 0 1] [1 0 0] [1 1 0]]) 0.0001))))
 
 (deftest pagerank-test-3
   (testing "a 3x3 matrix with beta is 0.7."
-    (is (double-coll= [0.1 0.135 0.765] (pagerank 0.7 1.0E-10 [[0 0 0] [1 0 0] [1 1 1]])))))
+    (is (vector-almost-equal [0.1 0.135 0.765] (pagerank 0.7 1.0E-10 [[0 0 0] [1 0 0] [1 1 1]]) 0.0001))))
