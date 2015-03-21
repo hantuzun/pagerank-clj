@@ -1,6 +1,6 @@
 (ns pagerank.core_test
-  (:require [clojure.test :refer :all]
-            [pagerank.core :refer :all]))
+  (:use [clojure.test]
+        [pagerank.core]))
 
 (deftest diff-test-1
   (testing "diff 1 2."
@@ -63,14 +63,6 @@
 (deftest preprocess-matrix-test
   (testing "converting a link matrix to link weight matrix."
     (is (= [[1 0][5/8 3/8]] (preprocess-matrix [[3 5][0 3]])))))
-
-(deftest emrehan-map-test
-  (testing "emrehan-map applies map f to the first parameter to every element of the second parameter."
-    (is (= [0 2 4] (emrehan-map * 2 [0 1 2])))))
-
-(deftest emrehan-map-test-2
-  (testing "emrehan-map for vectors."
-    (is (= [[5 8 11] [10 21 42]] (emrehan-map #(map + %1 %2) [0 1 2] [[5 7 9] [10 20 40]])))))
 
 (deftest pagerank-row-test
   (testing "calculating pagerank of an element."

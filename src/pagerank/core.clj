@@ -1,8 +1,12 @@
-(ns pagerank.core)
+(ns pagerank.core
+  (:use [clojure.core.matrix :only [row-count transpose]]))
 
 ; normalize a vector such that the sum of the vector is 1
 (defn preprocess-vector [v]
-  (map #(/ % (reduce + v)) v))
+  (let [sum (reduce + v)]
+    (if (< 0 sum)
+      (map #(/ % sum) v)
+      v)))
 
 ; normalize a matrix such that every column sums to 1
 (defn preprocess-matrix [g]
@@ -32,24 +36,14 @@
 (defn pagerank-row [pr row]
   (reduce + (map * pr row)))
 
-; applies map to an element and a vector where the element is used for every item in the vector
-(defn emrehan-map [f x coll]
-  (let [n (count coll)
-        x-coll (repeat n x)]
-    (map f x-coll coll)))
-
 ; re-inserts the leaked pagerank such that it sums up to 1
 (defn normalize-pagerank [r]
   (let [n (count r)]
   (map #(+ % (/ (- 1 (reduce + r)) n)) r)))
 
-; transpose the matrix
-(defn transpose [g]
-  (vec (apply map vector g)))
-
 ; returns a fuction that that takes a pagerank vector and returns
 (defn make-pagerank-calculator [beta g]
-  (fn [row] (normalize-pagerank (emrehan-map * beta (emrehan-map pagerank-row row (transpose g))))))
+  (fn [row] (normalize-pagerank (map #(* beta %) (map #(pagerank-row row %) (transpose g))))))
 
 ; returns a function with determined sensitivity that checks whether if two vectors are almost equal
 (defn make-stabilized? [epsilon]
@@ -62,5 +56,5 @@
 
 ; calculates the pagerank using recur-improve
 (defn pagerank [beta epsilon g]
-  (let [n (count g)]
+  (let [n (row-count g)]
     (recur-improve (repeat n 1) (initial-pagerank n) (make-pagerank-calculator beta (preprocess-matrix g)) (make-stabilized? epsilon))))
