@@ -25,3 +25,8 @@
     (def m (generate-matrix 1000000))
     (populate-matrix m)
     (is (= 5105039.0 (esum m)))))
+
+; 5105039 is the number of edges in the given data
+(deftest get-matrix-test
+  (testing "get a matrix of the edges list."
+    (is (= 5105039.0 (esum (get-matrix))))))

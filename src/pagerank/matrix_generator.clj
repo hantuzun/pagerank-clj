@@ -20,7 +20,14 @@
 (defn get-lines []
   (map #(split % #"\s+") (drop 4 (line-seq (get-reader)))))
 
-;populates a sparse matrix using an reader of edge to edge
+; populates a sparse matrix using an reader of edge to edge
 (defn populate-matrix [m]
-  (doseq [line (get-lines)] 
-    (mset! m (Integer/parseInt (first line)) (Integer/parseInt (second line)) 1)))
+  (doall (for [line (get-lines)] 
+    (mset! m (Integer/parseInt (first line)) (Integer/parseInt (second line)) 1))))
+
+; return a matrix populated by the given edges in the file
+; 1000000 is more than the biggest node id in the given data
+; sparse-matrix is mutable
+(defn get-matrix []
+	(let [m (generate-matrix 1000000)]
+    (populate-matrix m) m))
